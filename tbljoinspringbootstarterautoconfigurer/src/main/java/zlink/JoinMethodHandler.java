@@ -1,5 +1,6 @@
 package zlink;
 
+import org.apache.ibatis.annotations.Param;
 import zlink.ex.RepeatedOrderException;
 import zlink.TblRegister;
 import zlink.anno.FromTbl;
@@ -66,7 +67,7 @@ public class JoinMethodHandler extends AbstractMethod {
     ));
     Map<String,String> joinTypeMap = new LinkedHashMap<>();  //k:表名, v:join类型
 
-    String currMethod=null;
+              // String currMethod=null;
     List<Integer> orderLi = new ArrayList<>();
     Method[] methods = mapperClass.getDeclaredMethods();  //如:selectList()...
     for (Method method : methods) {
@@ -97,7 +98,7 @@ public class JoinMethodHandler extends AbstractMethod {
 
                 // String joinType = join.getClass().getDeclaredAnnotation(JoinAndSelect.class).joinType().getVal();
                 // 两张表的join类型
-                String joinType = ((Annotation)join).annotationType().getDeclaredAnnotation(JoinAndSelect.class).joinType().getVal();
+                          // String joinType = ((Annotation)join).annotationType().getDeclaredAnnotation(JoinAndSelect.class).joinType().getVal();
                 // @{LIR}join的tblName()
                 String tblName = join.getClass().getMethod("tblName").invoke(join).toString();
                 // Map<String, TblRegister.Tbl> registInfo = TblRegister.registInfo;
@@ -124,7 +125,7 @@ public class JoinMethodHandler extends AbstractMethod {
 
           // {LIR}join只有一个的情况  
         } else if ((jas = getAnnotation(anno, JoinAndSelect.class)) != null || (anno.annotationType()== JoinAndSelect.class)) {  //{LIR}join;
-          String joinType = jas != null ? jas.joinType().getVal() : ((JoinAndSelect)anno).freeJoinType();
+                    // String joinType = jas != null ? jas.joinType().getVal() : ((JoinAndSelect)anno).freeJoinType();
           String tblName = null;
           try {
             tblName = anno.getClass().getMethod("tblName").invoke(anno).toString();
@@ -132,8 +133,10 @@ public class JoinMethodHandler extends AbstractMethod {
               //获取表名, 通过表名再获取join的表
               String getTblName = prevTbl != null?prevTbl:getTblName(modelClass, tableInfo);
               TblRegister.Tbl tblByFk = TblRegister.getTbl(getTblName).getUniqueForeignTbl();
-              String as = StringUtils.isEmpty(tblByFk.getAlias()) ? "" : " AS " + tblByFk.getAlias();
-              tblName = tblByFk.getName()+as;
+              if (tblByFk!=null) {
+                String as = StringUtils.isEmpty(tblByFk.getAlias()) ? "" : " AS " + tblByFk.getAlias();
+                tblName = tblByFk.getName() + as;
+              }
             }
           } catch (Exception e) {
             e.printStackTrace();
@@ -162,7 +165,25 @@ public class JoinMethodHandler extends AbstractMethod {
         StringBuffer joinOn = produceJoinOn(joinTypeMap, getTblName(modelClass, tableInfo));
         // System.out.println("\n        joinOn:  " + sql.append(joinOn));
         sql.append(joinOn);
-        sql.append(" <where> ${ew.sqlSegment} </where></script>");
+        // sql.append(" <where> ${ew.sqlSegment} </where></script>");
+        String annoValue = null;
+        Class<?>[] methodParamTypes = method.getParameterTypes();  //方法的所有参数的类型
+        for (int i = 0; i < methodParamTypes.length; i++) {
+          Class<?> methodParamType = methodParamTypes[i];
+          if (Wrapper.class.isAssignableFrom(methodParamType)) {
+            Annotation[] annotations = method.getParameterAnnotations()[i];
+            for (Annotation anno : annotations) {
+              if (anno.annotationType() == Param.class) {
+                annoValue = ((Param)anno).value();
+              }
+            }
+          }
+        }
+        if (annoValue != null) {
+          sql.append(" <if test=\"" +annoValue+ "!=null\">${" +annoValue+ ".customSqlSegment}</if> </script>");
+        } else {
+          sql.append(" </script>");
+        }
 
         methodNameSql.put(method.getName(), sql.toString());
       }

@@ -1,16 +1,19 @@
 package zlink.anno;
 
 import zlink.JoinType;
+import zlink.anno.slave.ForJoinAndSelect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD,ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited  //可以继承
+// @Inherited  //可以继承
+@Repeatable(ForJoinAndSelect.class)
 public @interface JoinAndSelect {
   // String tbl() default ""; 
   // String onCol() default "";

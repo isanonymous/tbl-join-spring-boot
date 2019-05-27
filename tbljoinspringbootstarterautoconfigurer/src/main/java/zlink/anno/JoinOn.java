@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 public @interface JoinOn {
   String tbl() default ""; 
   String onCol() default "";
-  JoinType joinType() default JoinType.L;
+  // JoinType joinType() default JoinType.L;
 
   // String[] selectCol() default {};
 }
