@@ -28,7 +28,7 @@ public class TblRegister {
   }
 
   public static void addMap(Class<?> clazz) {
-    System.out.println("\n        clazz:  " + clazz);
+    // System.out.println("\n        clazz:  " + clazz);
     // if (TblRegister.isExist(clazz)){
     //   return;
     // }
@@ -38,7 +38,7 @@ public class TblRegister {
       TableName tn;
       String tableName = null;
       if ((tn = clazz.getDeclaredAnnotation(TableName.class)) != null) {  //实体类上有@TableName
-        tableName=tn.value();
+        tableName= tablePrefix + tn.value();
       }else {
         tableName = tablePrefix + clazz.getSimpleName();
       }
